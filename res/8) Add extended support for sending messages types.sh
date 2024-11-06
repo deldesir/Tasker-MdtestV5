@@ -32,17 +32,17 @@ code_body='
 			return
 		}
 		
-		msg := &waProto.Message{
-			ListMessage: &waProto.ListMessage{
+		msg := &waE2E.Message{
+			ListMessage: &waE2E.ListMessage{
 				Title:       proto.String(args[1]),
 				Description: proto.String(args[2]),
 				FooterText:  proto.String(args[3]),
 				ButtonText:  proto.String(args[4]),
-				ListType:    waProto.ListMessage_SINGLE_SELECT.Enum(),
-				Sections: []*waProto.ListMessage_Section{
+				ListType:    waE2E.ListMessage_SINGLE_SELECT.Enum(),
+				Sections: []*waE2E.ListMessage_Section{
 					{
 						Title: proto.String(args[5]),
-						Rows:  []*waProto.ListMessage_Row{},
+						Rows:  []*waE2E.ListMessage_Row{},
 					},
 				},
 			},
@@ -69,12 +69,12 @@ code_body='
 					return
 				}
 			} else if (i+2)%3 == 0 {
-				newRow := &waProto.ListMessage_Row{
-			        RowId:       proto.String(fmt.Sprintf("id%d", i+1)),
+				newRow := &waE2E.ListMessage_Row{
+					RowID:       proto.String(fmt.Sprintf("id%d", i+1)),
 					Title:       proto.String(itemTmp),
 					Description: proto.String(items[i]),
-			    }
-			    msg.ListMessage.Sections[0].Rows = append(msg.ListMessage.Sections[0].Rows, newRow)
+				}
+				msg.ListMessage.Sections[0].Rows = append(msg.ListMessage.Sections[0].Rows, newRow)
 				if i+1 == len(items) {
 					break
 				}
@@ -124,14 +124,14 @@ code_body='
 			jsonContent, err := json.MarshalIndent(groups, "", "  ")
 			if err != nil {
 				fmt.Println(err)
- 	   		return
+				return
 			}
 			result := make(map[string]interface{})
 			result["groups"] = json.RawMessage(jsonContent)
 			output, err := json.MarshalIndent(result, "", "  ")
 			if err != nil {
 				fmt.Println(err)
-	    		return
+				return
 			}
 			fmt.Print(string(output))
 		}
@@ -203,36 +203,36 @@ code_body='
 		ogp, err := opengraph.Fetch(args[1])
 		if err != nil {
 			log.Errorf("Could not fetch Open Graph data: %s", err)
-			msg := &waProto.Message{ExtendedTextMessage: &waProto.ExtendedTextMessage{
+			msg := &waE2E.Message{ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 				Text:          proto.String(args[1] + text),
-				CanonicalUrl:  proto.String(args[1]),
+				CanonicalURL:  proto.String(args[1]),
 				MatchedText:   proto.String(args[1]),
 			}}
 			resp, err := cli.SendMessage(context.Background(), recipient, msg)
 			if err != nil {
 				log.Errorf("Error sending link message: %v", err)
-		    } else {
-		    	log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
-		    }
-		    return
+			} else {
+				log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
+			}
+			return
 		}
 		
 		ogp.ToAbs()
 		
 		if ! (ogp.Title != "" && ogp.Description != "" && (len(ogp.Image) > 0 && ogp.Image[0].URL != "")) {
 			log.Errorf("Could not fetch Open Graph data: Missing Open Graph content")
-			msg := &waProto.Message{ExtendedTextMessage: &waProto.ExtendedTextMessage{
+			msg := &waE2E.Message{ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 					Text:          proto.String(args[1] + text),
-					CanonicalUrl:  proto.String(args[1]),
+					CanonicalURL:  proto.String(args[1]),
 					MatchedText:   proto.String(args[1]),
 				}}
 				
-			resp, err := cli.SendMessage(context.Background(), recipient, msg)
+				resp, err := cli.SendMessage(context.Background(), recipient, msg)
 			if err != nil {
 				log.Errorf("Error sending link message: %v", err)
-		    } else {
-		    	log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
-		    }
+			} else {
+				log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
+			}
 			return
 		}
 		
@@ -241,12 +241,12 @@ code_body='
 			log.Errorf("Could not fetch thumbnail data: %s", err)
 			return
 		}
-	
+
 		if data.StatusCode != http.StatusOK {
 			log.Errorf("Could not fetch thumbnail data: %d\n", data.StatusCode)
 			return
 		}
-	
+
 		jpegBytes, err := ioutil.ReadAll(data.Body)
 		if err != nil {
 			log.Errorf("Could not fetch thumbnail data: %s", err)
@@ -270,25 +270,25 @@ code_body='
 				return
 			}
 			
-			msg := &waProto.Message{ExtendedTextMessage: &waProto.ExtendedTextMessage{
+			msg := &waE2E.Message{ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 					Text:          proto.String(args[1] + text),
 					Title:         proto.String(ogp.Title),
-					CanonicalUrl:  proto.String(args[1]),
+					CanonicalURL:  proto.String(args[1]),
 					MatchedText:   proto.String(args[1]),
 					Description:   proto.String(ogp.Description),
-					JpegThumbnail: jpegBytes,
+					JPEGThumbnail: jpegBytes,
 					ThumbnailDirectPath: &thumbnailResp.DirectPath,
-					ThumbnailSha256: thumbnailResp.FileSHA256,
-					ThumbnailEncSha256: thumbnailResp.FileEncSHA256,
+					ThumbnailSHA256: thumbnailResp.FileSHA256,
+					ThumbnailEncSHA256: thumbnailResp.FileEncSHA256,
 					MediaKey:      thumbnailResp.MediaKey,
 				}}
 				
-			resp, err := cli.SendMessage(context.Background(), recipient, msg)
+				resp, err := cli.SendMessage(context.Background(), recipient, msg)
 			if err != nil {
 				log.Errorf("Error sending link message: %v", err)
-		    } else {
-		    	log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
-		    }
+			} else {
+				log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
+			}
 		} else {
 			err := error(nil)
 			thumbnailResp := whatsmeow.UploadResponse{}
@@ -303,27 +303,27 @@ code_body='
 				return
 			}
 			
-			msg := &waProto.Message{ExtendedTextMessage: &waProto.ExtendedTextMessage{
+			msg := &waE2E.Message{ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 					Text:          proto.String(args[1] + text),
 					Title:         proto.String(ogp.Title),
-					CanonicalUrl:  proto.String(args[1]),
+					CanonicalURL:  proto.String(args[1]),
 					MatchedText:   proto.String(args[1]),
 					Description:   proto.String(ogp.Description),
-					JpegThumbnail: jpegBytes,
+					JPEGThumbnail: jpegBytes,
 					ThumbnailDirectPath: &thumbnailResp.DirectPath,
-					ThumbnailSha256: thumbnailResp.FileSHA256,
-					ThumbnailEncSha256: thumbnailResp.FileEncSHA256,
+					ThumbnailSHA256: thumbnailResp.FileSHA256,
+					ThumbnailEncSHA256: thumbnailResp.FileEncSHA256,
 					ThumbnailWidth:  proto.Uint32(uint32(config.Width)),
 					ThumbnailHeight:  proto.Uint32(uint32(config.Height)),
 					MediaKey:      thumbnailResp.MediaKey,
 				}}
 				
-			resp, err := cli.SendMessage(context.Background(), recipient, msg)
+				resp, err := cli.SendMessage(context.Background(), recipient, msg)
 			if err != nil {
 				log.Errorf("Error sending link message: %v", err)
-		    } else {
-		    	log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
-		    }
+			} else {
+				log.Infof("Link message sent (server timestamp: %s)", resp.Timestamp)
+			}
 		}
 	case "senddoc":
 		if len(args) < 3 {
@@ -355,15 +355,15 @@ code_body='
 			caption = args[3]
 		}
 		if len(args) < 5 {
-			msg := &waProto.Message{DocumentMessage: &waProto.DocumentMessage{
+			msg := &waE2E.Message{DocumentMessage: &waE2E.DocumentMessage{
 				Title:         proto.String(args[2]),
 				Caption:       proto.String(caption),
-				Url:           proto.String(uploaded.URL),
+				URL:           proto.String(uploaded.URL),
 				DirectPath:    proto.String(uploaded.DirectPath),
 				MediaKey:      uploaded.MediaKey,
 				Mimetype:      proto.String(http.DetectContentType(data)),
-				FileEncSha256: uploaded.FileEncSHA256,
-				FileSha256:    uploaded.FileSHA256,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			}}
 			resp, err := cli.SendMessage(context.Background(), recipient, msg)
@@ -373,25 +373,24 @@ code_body='
 				log.Infof("Document message sent (server timestamp: %s)", resp.Timestamp)
 			}
 		} else {
-			msg := &waProto.Message{DocumentMessage: &waProto.DocumentMessage{
+			msg := &waE2E.Message{DocumentMessage: &waE2E.DocumentMessage{
 				Title:         proto.String(args[2]),
 				Caption:       proto.String(caption),
-				Url:           proto.String(uploaded.URL),
+				URL:           proto.String(uploaded.URL),
 				DirectPath:    proto.String(uploaded.DirectPath),
 				MediaKey:      uploaded.MediaKey,
 				Mimetype:      proto.String(args[4]),
-				FileEncSha256: uploaded.FileEncSHA256,
-				FileSha256:    uploaded.FileSHA256,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			}}
 			resp, err := cli.SendMessage(context.Background(), recipient, msg)
-		    if err != nil {
-			    log.Errorf("Error sending document message: %v", err)
-		    } else {
-			    log.Infof("Document message sent (server timestamp: %s)", resp.Timestamp)
-		    }
+			if err != nil {
+				log.Errorf("Error sending document message: %v", err)
+			} else {
+				log.Infof("Document message sent (server timestamp: %s)", resp.Timestamp)
+			}
 		}
-	
 	case "sendvid":
 		if len(args) < 2 {
 			log.Errorf("Usage: sendvid <jid> <video path> [caption]")
@@ -437,19 +436,18 @@ code_body='
 			} else {
 				uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaVideo)
 			}
-			//uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaVideo)
 			if err != nil {
 				log.Errorf("Failed to upload file: %v", err)
 				return
 			}
-			msg := &waProto.Message{VideoMessage: &waProto.VideoMessage{
+			msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
 				Caption:       proto.String(strings.Join(args[2:], " ")),
-				Url:           proto.String(uploaded.URL),
+				URL:           proto.String(uploaded.URL),
 				DirectPath:    proto.String(uploaded.DirectPath),
 				MediaKey:      uploaded.MediaKey,
 				Mimetype:      proto.String(http.DetectContentType(data)),
-				FileEncSha256: uploaded.FileEncSHA256,
-				FileSha256:    uploaded.FileSHA256,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			}}
 			resp, err := cli.SendMessage(context.Background(), recipient, msg)
@@ -485,7 +483,6 @@ code_body='
 		} else {
 			uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaVideo)
 		}
-		//uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaVideo)
 		if err != nil {
 			log.Errorf("Failed to upload file: %v", err)
 			return
@@ -496,24 +493,23 @@ code_body='
 		} else {
 			thumbnailResp, err = cli.Upload(context.Background(), jpegBytes, whatsmeow.MediaImage)
 		}
-		//thumbnailResp, err := cli.Upload(context.Background(), jpegBytes, whatsmeow.MediaImage)
 		if err != nil {
 			log.Errorf("Failed to upload preview thumbnail file: %v", err)
 			return
 		}
 		
-		msg := &waProto.Message{VideoMessage: &waProto.VideoMessage{
+		msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
 			Caption:       proto.String(strings.Join(args[2:], " ")),
-			Url:           proto.String(uploaded.URL),
+			URL:           proto.String(uploaded.URL),
 			DirectPath:    proto.String(uploaded.DirectPath),
 			ThumbnailDirectPath: &thumbnailResp.DirectPath,
-			ThumbnailSha256: thumbnailResp.FileSHA256,
-			ThumbnailEncSha256: thumbnailResp.FileEncSHA256,
-			JpegThumbnail: jpegBytes,
+			ThumbnailSHA256: thumbnailResp.FileSHA256,
+			ThumbnailEncSHA256: thumbnailResp.FileEncSHA256,
+			JPEGThumbnail: jpegBytes,
 			MediaKey:      uploaded.MediaKey,
 			Mimetype:      proto.String(http.DetectContentType(data)),
-			FileEncSha256: uploaded.FileEncSHA256,
-			FileSha256:    uploaded.FileSHA256,
+			FileEncSHA256: uploaded.FileEncSHA256,
+			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(data))),
 		}}
 		resp, err := cli.SendMessage(context.Background(), recipient, msg)
@@ -522,7 +518,7 @@ code_body='
 		} else {
 			log.Infof("Video message sent (server timestamp: %s)", resp.Timestamp)
 		}
-	
+
 	case "sendaudio":
 		if len(args) < 2 {
 			log.Errorf("Usage: sendaudio <jid> <audio path>")
@@ -567,19 +563,18 @@ code_body='
 			} else {
 				uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaAudio)
 			}
-			//uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaAudio)
 			if err != nil {
 				log.Errorf("Failed to upload file: %v", err)
 				return
 			}
 			
-			msg := &waProto.Message{AudioMessage: &waProto.AudioMessage{
-				Url:           proto.String(uploaded.URL),
+			msg := &waE2E.Message{AudioMessage: &waE2E.AudioMessage{
+				URL:           proto.String(uploaded.URL),
 				DirectPath:    proto.String(uploaded.DirectPath),
 				MediaKey:      uploaded.MediaKey,
 				Mimetype:      proto.String("audio/ogg; codecs=opus"),
-				FileEncSha256: uploaded.FileEncSHA256,
-				FileSha256:    uploaded.FileSHA256,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
 				FileLength:    proto.Uint64(uint64(len(data))),
 			}}
 			resp, err := cli.SendMessage(context.Background(), recipient, msg)
@@ -600,19 +595,18 @@ code_body='
 		} else {
 			uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaAudio)
 		}
-		//uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaAudio)
 		if err != nil {
 			log.Errorf("Failed to upload file: %v", err)
 			return
 		}
 		
-		msg := &waProto.Message{AudioMessage: &waProto.AudioMessage{
-			Url:           proto.String(uploaded.URL),
+		msg := &waE2E.Message{AudioMessage: &waE2E.AudioMessage{
+			URL:           proto.String(uploaded.URL),
 			DirectPath:    proto.String(uploaded.DirectPath),
 			MediaKey:      uploaded.MediaKey,
 			Mimetype:      proto.String("audio/ogg; codecs=opus"),
-			FileEncSha256: uploaded.FileEncSHA256,
-			FileSha256:    uploaded.FileSHA256,
+			FileEncSHA256: uploaded.FileEncSHA256,
+			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(data))),
 		}}
 		resp, err := cli.SendMessage(context.Background(), recipient, msg)
@@ -684,27 +678,26 @@ code_body='
 				} else {
 					uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 				}
-				//uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 				if err != nil {
 					log.Errorf("Failed to upload file: %v", err)
 					return
 				}
-			    msg := &waProto.Message{ImageMessage: &waProto.ImageMessage{
-				    Caption:       proto.String(strings.Join(args[2:], " ")),
-				    Url:           proto.String(uploaded.URL),
-				    DirectPath:    proto.String(uploaded.DirectPath),
-				    MediaKey:      uploaded.MediaKey,
-				    Mimetype:      proto.String(http.DetectContentType(data)),
-				    FileEncSha256: uploaded.FileEncSHA256,
-				    FileSha256:    uploaded.FileSHA256,
-				    FileLength:    proto.Uint64(uint64(len(data))),
-			    }}
-			    resp, err := cli.SendMessage(context.Background(), recipient, msg)
-			    if err != nil {
-				    log.Errorf("Error sending image message: %v", err)
-			    } else {
-				    log.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
-			    }
+				msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
+					Caption:       proto.String(strings.Join(args[2:], " ")),
+					URL:           proto.String(uploaded.URL),
+					DirectPath:    proto.String(uploaded.DirectPath),
+					MediaKey:      uploaded.MediaKey,
+					Mimetype:      proto.String(http.DetectContentType(data)),
+					FileEncSHA256: uploaded.FileEncSHA256,
+					FileSHA256:    uploaded.FileSHA256,
+					FileLength:    proto.Uint64(uint64(len(data))),
+				}}
+				resp, err := cli.SendMessage(context.Background(), recipient, msg)
+				if err != nil {
+					log.Errorf("Error sending image message: %v", err)
+				} else {
+					log.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
+				}
 				return
 			}
 			imageFile.Close()
@@ -727,7 +720,6 @@ code_body='
 			} else {
 				uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 			}
-			//uploaded, err := cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 			if err != nil {
 				log.Errorf("Failed to upload file: %v", err)
 				return
@@ -738,31 +730,30 @@ code_body='
 			} else {
 				thumbnailResp, err = cli.Upload(context.Background(), jpegBytes, whatsmeow.MediaImage)
 			}
-			//thumbnailResp, err := cli.Upload(context.Background(), jpegBytes, whatsmeow.MediaImage)
 			if err != nil {
 				log.Errorf("Failed to upload preview thumbnail file: %v", err)
 				return
 			}
-		    msg := &waProto.Message{ImageMessage: &waProto.ImageMessage{
-			    Caption:       proto.String(strings.Join(args[2:], " ")),
-			    Url:           proto.String(uploaded.URL),
-			    DirectPath:    proto.String(uploaded.DirectPath),
-			    ThumbnailDirectPath: &thumbnailResp.DirectPath,
-			    ThumbnailSha256: thumbnailResp.FileSHA256,
-			    ThumbnailEncSha256: thumbnailResp.FileEncSHA256,
-			    JpegThumbnail: jpegBytes,
-			    MediaKey:      uploaded.MediaKey,
-			    Mimetype:      proto.String(http.DetectContentType(data)),
-			    FileEncSha256: uploaded.FileEncSHA256,
-			    FileSha256:    uploaded.FileSHA256,
-			    FileLength:    proto.Uint64(uint64(len(data))),
-		    }}
-		    resp, err := cli.SendMessage(context.Background(), recipient, msg)
-		    if err != nil {
-			    log.Errorf("Error sending image message: %v", err)
-		    } else {
-			    log.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
-		    }
+			msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
+				Caption:       proto.String(strings.Join(args[2:], " ")),
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				ThumbnailDirectPath: &thumbnailResp.DirectPath,
+				ThumbnailSHA256: thumbnailResp.FileSHA256,
+				ThumbnailEncSHA256: thumbnailResp.FileEncSHA256,
+				JPEGThumbnail: jpegBytes,
+				MediaKey:      uploaded.MediaKey,
+				Mimetype:      proto.String(http.DetectContentType(data)),
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(data))),
+			}}
+			resp, err := cli.SendMessage(context.Background(), recipient, msg)
+			if err != nil {
+				log.Errorf("Error sending image message: %v", err)
+			} else {
+				log.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
+			}
 			
 			return
 		}
@@ -796,7 +787,6 @@ code_body='
 			} else {
 				uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 			}
-			//uploaded, err = cli.Upload(context.Background(), data, whatsmeow.MediaImage)
 			if err != nil {
 				log.Errorf("Failed to upload file: %v", err)
 				return
@@ -810,7 +800,6 @@ code_body='
 			} else {
 				uploaded, err = cli.Upload(context.Background(), outBytes, whatsmeow.MediaImage)
 			}
-			//uploaded, err = cli.Upload(context.Background(), outBytes, whatsmeow.MediaImage)
 			if err != nil {
 				log.Errorf("Failed to upload file: %v", err)
 				return
@@ -823,31 +812,30 @@ code_body='
 		} else {
 			thumbnailResp, err = cli.Upload(context.Background(), jpegBytes, whatsmeow.MediaImage)
 		}
-		//thumbnailResp, err := cli.Upload(context.Background(), jpegBytes, whatsmeow.MediaImage)
 		if err != nil {
 			log.Errorf("Failed to upload preview thumbnail file: %v", err)
 			return
 		}
-	    msg := &waProto.Message{ImageMessage: &waProto.ImageMessage{
-		    Caption:       proto.String(strings.Join(args[2:], " ")),
-		    Url:           proto.String(uploaded.URL),
-		    DirectPath:    proto.String(uploaded.DirectPath),
-		    ThumbnailDirectPath: &thumbnailResp.DirectPath,
-		    ThumbnailSha256: thumbnailResp.FileSHA256,
-		    ThumbnailEncSha256: thumbnailResp.FileEncSHA256,
-		    JpegThumbnail: jpegBytes,
-		    MediaKey:      uploaded.MediaKey,
-		    Mimetype:      proto.String(http.DetectContentType(contentData)),
-		    FileEncSha256: uploaded.FileEncSHA256,
-		    FileSha256:    uploaded.FileSHA256,
-		    FileLength:    proto.Uint64(uint64(lenData)),
-	    }}
-	    resp, err := cli.SendMessage(context.Background(), recipient, msg)
-	    if err != nil {
-		    log.Errorf("Error sending image message: %v", err)
-	    } else {
-		    log.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
-	    }
+		msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
+			Caption:       proto.String(strings.Join(args[2:], " ")),
+			URL:           proto.String(uploaded.URL),
+			DirectPath:    proto.String(uploaded.DirectPath),
+			ThumbnailDirectPath: &thumbnailResp.DirectPath,
+			ThumbnailSHA256: thumbnailResp.FileSHA256,
+			ThumbnailEncSHA256: thumbnailResp.FileEncSHA256,
+			JPEGThumbnail: jpegBytes,
+			MediaKey:      uploaded.MediaKey,
+			Mimetype:      proto.String(http.DetectContentType(contentData)),
+			FileEncSHA256: uploaded.FileEncSHA256,
+			FileSHA256:    uploaded.FileSHA256,
+			FileLength:    proto.Uint64(uint64(lenData)),
+		}}
+		resp, err := cli.SendMessage(context.Background(), recipient, msg)
+		if err != nil {
+			log.Errorf("Error sending image message: %v", err)
+		} else {
+			log.Infof("Image message sent (server timestamp: %s)", resp.Timestamp)
+		}
 	case "markread":
 		if len(args) < 2 {
 			log.Errorf("Usage: markread <jid> <message ID 1> [message ID X] (Note: Can add multiple message IDs to mark as read. [] is optional)")
@@ -860,9 +848,9 @@ code_body='
 		
 		messageID := make([]string, 0, len(args)-1)
 		for _, id := range args[1:] {
-		    if id != "" {
-		        messageID = append(messageID, id)
-		    }
+			if id != "" {
+				messageID = append(messageID, id)
+			}
 		}
 		
 		err := cli.MarkRead(messageID, time.Now(), recipient, types.EmptyJID)
