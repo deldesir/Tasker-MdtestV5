@@ -23,44 +23,41 @@ TMP_DIR="$(mktemp -d)"
 # Navigate to temporary directory
 cd "$TMP_DIR"
 
-# Clone the latest whatsmeow repository without limiting the depth
-echo "Cloning the whatsmeow repository..."
+# Clone the original whatsmeow repository
+echo "Cloning the original whatsmeow repository..."
 git clone https://github.com/tulir/whatsmeow.git
 cd whatsmeow
 
-# Define the specific commit hash
-COMMIT_HASH="a95956d6923db08bd9ff5f3dde9bf03cb88ffebe"
+# Verify that mdtest does not exist
+if [ -d "mdtest" ]; then
+    echo "Note: mdtest directory already exists in the original repository."
+else
+    echo "mdtest directory does not exist in the original repository."
+fi
 
-# Create a temporary directory to extract mdtest
-TMP_MDTEST_DIR="$(mktemp -d)"
-echo "Extracting mdtest directory from commit $COMMIT_HASH using git archive..."
-git archive "$COMMIT_HASH" mdtest | tar -x -C "$TMP_MDTEST_DIR" || {
-    echo "Error: Failed to extract mdtest directory using git archive."
+# Fetch the mdtest directory from your forked repository's main branch
+echo "Fetching mdtest directory from your forked repository's main branch..."
+git remote add deldesir https://github.com/deldesir/whatsmeow.git
+git fetch deldesir
+
+# Check out the mdtest directory from a fork's main branch
+git checkout deldesir/main -- mdtest || {
+    echo "Error: Failed to fetch mdtest directory from your fork's main branch."
     exit 1
 }
-
-# Move the extracted mdtest directory into the cloned repository
-echo "Integrating mdtest directory into the whatsmeow repository..."
-mv "$TMP_MDTEST_DIR/mdtest" . || {
-    echo "Error: Failed to move mdtest directory into whatsmeow repository."
-    exit 1
-}
-
-# Clean up the temporary mdtest extraction directory
-rm -rf "$TMP_MDTEST_DIR"
 
 # Verify that mdtest/main.go exists
 if [ ! -f "mdtest/main.go" ]; then
-    echo "Error: mdtest/main.go not found after extraction."
+    echo "Error: mdtest/main.go not found after fetching from your fork."
     echo "Contents of mdtest directory:"
     ls -la mdtest
     exit 1
 fi
 
 # Debugging: List contents to confirm
-echo "Listing whatsmeow directory after integrating mdtest:"
+echo "Listing whatsmeow directory after fetching mdtest:"
 ls -la
-echo "Listing mdtest directory after integrating:"
+echo "Listing mdtest directory:"
 ls -la mdtest
 
 # Clear the terminal for cleaner logs (optional)
