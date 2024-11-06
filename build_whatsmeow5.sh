@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+# Ensure the script runs on Termux
 if [ -n "$TERMUX_VERSION" ]; then
     apt update
     yes | pkg install -y git golang ffmpeg termux-elf-cleaner p7zip 2>/dev/null | grep -E '(Need to get |Get:|Unpacking |Setting up )'
@@ -13,7 +14,18 @@ TMP_DIR="$(mktemp -d)"
 
 cd "$TMP_DIR"
 
-git clone --depth 1 https://github.com/tulir/whatsmeow
+# Clone the latest whatsmeow repository
+git clone https://github.com/tulir/whatsmeow.git
+cd whatsmeow
+
+# Fetch the specific commit and checkout the mdtest directory
+git fetch origin a95956d6923db08bd9ff5f3dde9bf03cb88ffebe
+git checkout a95956d6923db08bd9ff5f3dde9bf03cb88ffebe -- mdtest
+
+# Alternatively, you can use git archive method
+# TMP_MDTEST_DIR=$(mktemp -d)
+# git archive a95956d6923db08bd9ff5f3dde9bf03cb88ffebe mdtest | tar -x -C "$TMP_MDTEST_DIR"
+# mv "$TMP_MDTEST_DIR/mdtest" .
 
 clear 2>/dev/null
 
@@ -25,10 +37,20 @@ find "$CURRENT_DIR/res" -maxdepth 1 -type f -name "*)*" -regex ".*/[0-9]+) .*" |
 done
 echo -e "\nDone adding extended support\n\n------------------------\n"
 
-# fix Termux permissions
-value="true"; key="allow-external-apps"; file="/data/data/com.termux/files/home/.termux/termux.properties"; mkdir -p "$(dirname "$file")"; chmod 700 "$(dirname "$file")"; if ! grep -E '^'"$key"'=.*' $file &>/dev/null; then [[ -s "$file" && ! -z "$(tail -c 1 "$file")" ]] && newline=$'\n' || newline=""; echo "$newline$key=$value" >> "$file"; else sed -i'' -E 's/^'"$key"'=.*/'"$key=$value"'/' $file; fi
+# Fix Termux permissions
+value="true"
+key="allow-external-apps"
+file="/data/data/com.termux/files/home/.termux/termux.properties"
+mkdir -p "$(dirname "$file")"
+chmod 700 "$(dirname "$file")"
+if ! grep -E '^'"$key"'=.*' "$file" &>/dev/null; then
+    [[ -s "$file" && ! -z "$(tail -c 1 "$file")" ]] && newline=$'\n' || newline=""
+    echo "$newline$key=$value" >> "$file"
+else
+    sed -i'' -E 's/^'"$key"'=.*/'"$key=$value"'/' "$file"
+fi
 
-cd whatsmeow/mdtest
+cd mdtest
 go mod tidy
 
 echo -e "\nFinal step, building mdtest binary. Takes about 10s~1min"
@@ -52,6 +74,7 @@ fi'
 
 go build -ldflags="-extldflags -s" -o mdtest.bin
 
+# Uncomment for debugging
 #echo "$TMP_DIR"
 #exit 0
 
@@ -64,7 +87,7 @@ if [ $? -eq 0 ]; then
     cp "$TMP_DIR/whatsmeow/mdtest/mdtest.bin" .
     if [ $? -ne 0 ]; then
         rm -rf "$TMP_DIR" &>/dev/null
-        echo "Error occured, exiting..."
+        echo "Error occurred, exiting..."
         exit 1
     fi
     echo "$mdtest_script" > mdtest
@@ -73,7 +96,7 @@ if [ $? -eq 0 ]; then
     rm -rf mdtest mdtest.bin &>/dev/null
 else
     rm -rf "$TMP_DIR" &>/dev/null
-    echo "Error occured, exiting..."
+    echo "Error occurred, exiting..."
     exit 1
 fi
 
@@ -81,7 +104,7 @@ rm -rf "$TMP_DIR" &>/dev/null
 
 #go clean -cache
 
-echo -e "\nSuccessfuly built Mdtest. Adding media support\nusing ffmpeg...\n"
+echo -e "\nSuccessfully built Mdtest. Adding media support\nusing ffmpeg...\n"
 
 cd "$CURRENT_DIR"
 
