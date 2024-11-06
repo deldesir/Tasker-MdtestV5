@@ -14,18 +14,27 @@ TMP_DIR="$(mktemp -d)"
 
 cd "$TMP_DIR"
 
-# Clone the latest whatsmeow repository
+# Clone the latest whatsmeow repository without limiting the depth
 git clone https://github.com/tulir/whatsmeow.git
 cd whatsmeow
 
-# Fetch the specific commit and checkout the mdtest directory
+# Fetch the specific commit
 git fetch origin a95956d6923db08bd9ff5f3dde9bf03cb88ffebe
-git checkout a95956d6923db08bd9ff5f3dde9bf03cb88ffebe -- mdtest
 
-# Alternatively, you can use git archive method
-# TMP_MDTEST_DIR=$(mktemp -d)
-# git archive a95956d6923db08bd9ff5f3dde9bf03cb88ffebe mdtest | tar -x -C "$TMP_MDTEST_DIR"
-# mv "$TMP_MDTEST_DIR/mdtest" .
+# Checkout the mdtest directory from the fetched commit
+git checkout FETCH_HEAD -- mdtest
+
+# Verify that mdtest/main.go exists
+if [ ! -f "mdtest/main.go" ]; then
+    echo "Error: mdtest/main.go not found after checkout."
+    exit 1
+fi
+
+# Debugging: List contents to confirm
+echo "Listing whatsmeow directory after checkout:"
+ls -la
+echo "Listing mdtest directory after checkout:"
+ls -la mdtest
 
 clear 2>/dev/null
 
@@ -75,8 +84,8 @@ fi'
 go build -ldflags="-extldflags -s" -o mdtest.bin
 
 # Uncomment for debugging
-#echo "$TMP_DIR"
-#exit 0
+# echo "$TMP_DIR"
+# exit 0
 
 if [ $? -eq 0 ]; then
     termux-elf-cleaner "$TMP_DIR/whatsmeow/mdtest/mdtest.bin" &>/dev/null
@@ -102,7 +111,7 @@ fi
 
 rm -rf "$TMP_DIR" &>/dev/null
 
-#go clean -cache
+# go clean -cache
 
 echo -e "\nSuccessfully built Mdtest. Adding media support\nusing ffmpeg...\n"
 
