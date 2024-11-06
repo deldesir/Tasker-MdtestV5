@@ -9,19 +9,18 @@ code_body='
 	if device_id != "<nil>" {
 		tmp_jid, _ := parseJID(device_id)
 		device_jid = fmt.Sprintf("%s", tmp_jid)
-		jids := []types.JID{}
-		jids = append(jids, tmp_jid)
-		userinfo, error := cli.GetUserInfo(jids)
-		if error != nil {
-			log.Errorf("Failed to get user info: %v", error)
-			} else {
-				for jid, _ := range userinfo {
-						default_jid = fmt.Sprintf("%s", jid)
+		jids := []types.JID{tmp_jid}
+		userinfo, err := cli.GetUserInfo(jids)
+		if err != nil {
+			log.Errorf("Failed to get user info: %v", err)
+		} else {
+			for jid := range userinfo {
+				default_jid = fmt.Sprintf("%s", jid)
 				break
 			}
 		}
 	}
-	
+
 	if len(args) > 0 {
 		if args[0] != "pair-phone" {
 			go func() {
@@ -33,7 +32,7 @@ code_body='
 				}
 				time.Sleep(2 * time.Second)
 				if !cli.IsLoggedIn() {
-					fmt.Fprintln(os.Stderr, " If not paired, try running -\n\n ./mdtest pair-phone <number>\n\n (<number> is \"Country Code\" + \"Phone Number\")\n\n (ie:- \"Country Code\" = 91, then 919876543210)")
+					fmt.Fprintln(os.Stderr, "If not paired, try running:\n\n./mdtest pair-phone <number>\n\n<number> is \"Country Code\" + \"Phone Number\"\n(e.g., if Country Code = 91, then use 919876543210)")
 					os.Exit(1)
 				}
 			}()
@@ -52,7 +51,7 @@ code_body='
 			}
 			time.Sleep(2 * time.Second)
 			if !cli.IsLoggedIn() {
-				fmt.Fprintln(os.Stderr, " If not paired, try running -\n\n ./mdtest pair-phone <number>\n\n (<number> is \"Country Code\" + \"Phone Number\")\n\n (ie:- \"Country Code\" = 91, then 919876543210)")
+				fmt.Fprintln(os.Stderr, "If not paired, try running:\n\n./mdtest pair-phone <number>\n\n<number> is \"Country Code\" + \"Phone Number\"\n(e.g., if Country Code = 91, then use 919876543210)")
 				os.Exit(1)
 			}
 		}()
