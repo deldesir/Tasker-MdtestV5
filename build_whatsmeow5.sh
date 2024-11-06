@@ -118,7 +118,9 @@ fi'
 echo "Building the mdtest binary with Go..."
 go build -ldflags="-extldflags -s" -o mdtest.bin
 
-# Check if the build was successful
+# Uncomment for debugging
+# echo "$TMP_DIR"
+# exit 0
 if [ $? -eq 0 ]; then
     echo "Cleaning the mdtest binary with termux-elf-cleaner..."
     termux-elf-cleaner "./mdtest.bin" &>/dev/null

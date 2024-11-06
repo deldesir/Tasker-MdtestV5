@@ -341,14 +341,14 @@ func parseReceivedMessage(evt *events.Message, wg *sync.WaitGroup) {
 			jsonData, _ = AppendToJSON(jsonData, "message_id", message_id)
 		} else if evt.Info.Type == "media" {
 			msgData := evt.Message.GetExtendedTextMessage()
-			if msgData.GetCanonicalUrl() != "" {
+			if msgData.GetCanonicalURL() != "" {
 				isSupported = true
 				message := fmt.Sprintf("%s", msgData.GetText())
 				matched_text := fmt.Sprintf("%s", msgData.GetMatchedText())
-				canonical_url := fmt.Sprintf("%s", msgData.GetCanonicalUrl())
+				canonical_url := fmt.Sprintf("%s", msgData.GetCanonicalURL())
 				description := fmt.Sprintf("%s", msgData.GetDescription())
 				title := fmt.Sprintf("%s", msgData.GetTitle())
-				linkPreviewThumbnail := msgData.GetJpegThumbnail()
+				linkPreviewThumbnail := msgData.GetJPEGThumbnail()
 				if len(linkPreviewThumbnail) == 0 {
 					log.Errorf("Failed to save link preview thumbnail: User cancelled it")
 					return
@@ -377,7 +377,7 @@ func parseReceivedMessage(evt *events.Message, wg *sync.WaitGroup) {
 		}
 	} else if evt.Message.GetButtonsResponseMessage() != nil {
 		isSupported = true
-		origin_message_id := fmt.Sprintf("%s", evt.Message.ButtonsResponseMessage.ContextInfo.GetStanzaId())
+		origin_message_id := fmt.Sprintf("%s", evt.Message.ButtonsResponseMessage.ContextInfo.GetStanzaID())
 		button_selected_button := fmt.Sprintf("%s", evt.Message.ButtonsResponseMessage.GetSelectedDisplayText())
 		button_title := fmt.Sprintf("%s", evt.Message.ButtonsResponseMessage.ContextInfo.QuotedMessage.ButtonsMessage.GetText())
 		button_body := fmt.Sprintf("%s", evt.Message.ButtonsResponseMessage.ContextInfo.QuotedMessage.ButtonsMessage.GetContentText())
@@ -392,7 +392,7 @@ func parseReceivedMessage(evt *events.Message, wg *sync.WaitGroup) {
 		jsonData, _ = AppendToJSON(jsonData, "message_id", message_id)
 	} else if evt.Message.GetListResponseMessage() != nil {
 		isSupported = true
-		origin_message_id := fmt.Sprintf("%s", evt.Message.ListResponseMessage.ContextInfo.GetStanzaId())
+		origin_message_id := fmt.Sprintf("%s", evt.Message.ListResponseMessage.ContextInfo.GetStanzaID())
 		list_selected_title := fmt.Sprintf("%s", evt.Message.ListResponseMessage.GetTitle())
 		list_selected_description := fmt.Sprintf("%s", evt.Message.ListResponseMessage.GetDescription())
 		list_title := fmt.Sprintf("%s", evt.Message.ListResponseMessage.ContextInfo.QuotedMessage.ListMessage.GetTitle())
@@ -414,7 +414,7 @@ func parseReceivedMessage(evt *events.Message, wg *sync.WaitGroup) {
 		jsonData, _ = AppendToJSON(jsonData, "origin_message_id", origin_message_id)
 	} else if evt.Message.GetPollUpdateMessage() != nil {
 		isSupported = true
-		message_id = fmt.Sprintf("%s", evt.Message.PollUpdateMessage.PollCreationMessageKey.GetId())
+		message_id = fmt.Sprintf("%s", evt.Message.PollUpdateMessage.PollCreationMessageKey.GetID())
 		decrypted, err := cli.DecryptPollVote(evt)
 		if err != nil {
 			log.Errorf("Failed to decrypt vote: %v", err)
@@ -509,7 +509,7 @@ func parseReceivedMessage(evt *events.Message, wg *sync.WaitGroup) {
 			longitude := fmt.Sprintf("%f", locData.GetDegreesLongitude())
 			jsonData, _ = AppendToJSON(jsonData, "location_latitude", latitude)
 			jsonData, _ = AppendToJSON(jsonData, "location_longitude", longitude)
-			locThumbnail := locData.GetJpegThumbnail()
+			locThumbnail := locData.GetJPEGThumbnail()
 			if len(locThumbnail) == 0 {
 				log.Errorf("Failed to save location thumbnail: User cancelled it")
 				return
@@ -537,7 +537,7 @@ func parseReceivedMessage(evt *events.Message, wg *sync.WaitGroup) {
 			longitude := fmt.Sprintf("%f", locData.GetDegreesLongitude())
 			jsonData, _ = AppendToJSON(jsonData, "location_latitude", latitude)
 			jsonData, _ = AppendToJSON(jsonData, "location_longitude", longitude)
-			locThumbnail := locData.GetJpegThumbnail()
+			locThumbnail := locData.GetJPEGThumbnail()
 			if len(locThumbnail) == 0 {
 				log.Errorf("Failed to save location thumbnail: User cancelled it")
 				return
