@@ -1,14 +1,14 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
-# Exit immediately if a command exits with a non-zero status
-set -e
-# Treat unset variables as an error and exit immediately
-set -u
-# Return the exit status of the last command in the pipe that failed
-set -o pipefail
+# Exit immediately if a command exits with a non-zero status, treat unset variables as errors, and trace commands
+set -euo pipefail
+set -x
+
+# Get the directory where the script is located
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Ensure the script runs on Termux
-if [ -n "$TERMUX_VERSION" ]; then
+if [ -n "${TERMUX_VERSION:-}" ]; then
     echo "Updating package lists and installing necessary packages..."
     apt update
     yes | pkg install -y git golang ffmpeg termux-elf-cleaner p7zip 2>/dev/null | grep -E '(Need to get |Get:|Unpacking |Setting up )'
@@ -18,7 +18,6 @@ else
 fi
 
 # Define directories
-CURRENT_DIR="$(pwd)"
 TMP_DIR="$(mktemp -d)"
 
 # Navigate to temporary directory
@@ -35,11 +34,17 @@ COMMIT_HASH="a95956d6923db08bd9ff5f3dde9bf03cb88ffebe"
 # Create a temporary directory to extract mdtest
 TMP_MDTEST_DIR="$(mktemp -d)"
 echo "Extracting mdtest directory from commit $COMMIT_HASH using git archive..."
-git archive "$COMMIT_HASH" mdtest | tar -x -C "$TMP_MDTEST_DIR"
+git archive "$COMMIT_HASH" mdtest | tar -x -C "$TMP_MDTEST_DIR" || {
+    echo "Error: Failed to extract mdtest directory using git archive."
+    exit 1
+}
 
 # Move the extracted mdtest directory into the cloned repository
 echo "Integrating mdtest directory into the whatsmeow repository..."
-mv "$TMP_MDTEST_DIR/mdtest" .
+mv "$TMP_MDTEST_DIR/mdtest" . || {
+    echo "Error: Failed to move mdtest directory into whatsmeow repository."
+    exit 1
+}
 
 # Clean up the temporary mdtest extraction directory
 rm -rf "$TMP_MDTEST_DIR"
@@ -58,14 +63,17 @@ ls -la
 echo "Listing mdtest directory after integrating:"
 ls -la mdtest
 
-# Clear the terminal for cleaner logs
-clear 2>/dev/null
+# Clear the terminal for cleaner logs (optional)
+clear 2>/dev/null || true
 
 # Add extended support by executing scripts in the res directory
 echo -e "\n------------------------\n\nAdding extended support:-\n"
 find "$CURRENT_DIR/res" -maxdepth 1 -type f -name "*)*" -regex ".*/[0-9]+) .*" | sort -V | while read -r script; do
     echo "Executing script: $script"
-    bash "$script"
+    bash "$script" || {
+        echo "Error: Failed to execute script $script"
+        exit 1
+    }
 done
 echo -e "\nDone adding extended support\n\n------------------------\n"
 
@@ -104,7 +112,7 @@ dir="$(cd "$(dirname "$0")"; pwd)"
 bin_name="$(basename "$0")"
 chmod 755 "$0" "$dir/${bin_name}.bin" 2>/dev/null >/dev/null
 
-if [ $(getprop ro.build.version.sdk) -gt 28 ]; then
+if [ "$(getprop ro.build.version.sdk)" -gt 28 ]; then
     if getprop ro.product.cpu.abilist | grep -q "64"; then
         exec /system/bin/linker64 "$dir/${bin_name}.bin" "$@"
     else
@@ -116,51 +124,42 @@ fi'
 
 # Build the mdtest binary
 echo "Building the mdtest binary with Go..."
-go build -ldflags="-extldflags -s" -o mdtest.bin
-
-# Uncomment for debugging
-# echo "$TMP_DIR"
-# exit 0
-if [ $? -eq 0 ]; then
-    echo "Cleaning the mdtest binary with termux-elf-cleaner..."
-    termux-elf-cleaner "./mdtest.bin" &>/dev/null
-
-    # Navigate back to the original directory
-    cd "$CURRENT_DIR"
-
-    # Prepare the build directory
-    echo "Preparing the build directory..."
-    rm -rf build/mdtest.zip build/mdtest build/mdtest.bin &>/dev/null
-    mkdir -p build
-    cd build
-
-    # Copy the cleaned mdtest binary
-    echo "Copying the mdtest binary to the build directory..."
-    cp "$TMP_DIR/whatsmeow/mdtest/mdtest.bin" .
-
-    # Verify the copy was successful
-    if [ $? -ne 0 ]; then
-        rm -rf "$TMP_DIR" &>/dev/null
-        echo "Error: Failed to copy mdtest.bin to the build directory. Exiting..."
-        exit 1
-    fi
-
-    # Create the mdtest script
-    echo "Creating the mdtest script..."
-    echo "$mdtest_script" > mdtest
-    chmod 755 mdtest mdtest.bin
-
-    # Package mdtest and its binary into a zip archive
-    echo "Packaging mdtest and mdtest.bin into mdtest.zip..."
-    7z a -tzip -mx=9 -bd -bso0 mdtest.zip mdtest mdtest.bin
-
-    # Clean up the individual files after packaging
-    rm -rf mdtest mdtest.bin &>/dev/null
-else
-    rm -rf "$TMP_DIR" &>/dev/null
-    echo "Error: Go build failed. Exiting..."
+go build -ldflags="-extldflags -s" -o mdtest.bin || {
+    echo "Error: Go build failed."
     exit 1
-fi
+}
+
+# Clean the mdtest binary with termux-elf-cleaner
+echo "Cleaning the mdtest binary with termux-elf-cleaner..."
+termux-elf-cleaner "./mdtest.bin" &>/dev/null
+
+# Navigate back to the original directory
+cd "$CURRENT_DIR"
+
+# Prepare the build directory
+echo "Preparing the build directory..."
+rm -rf build/mdtest.zip build/mdtest build/mdtest.bin &>/dev/null
+mkdir -p build
+cd build
+
+# Copy the cleaned mdtest binary
+echo "Copying the mdtest binary to the build directory..."
+cp "$TMP_DIR/whatsmeow/mdtest/mdtest.bin" . || {
+    echo "Error: Failed to copy mdtest.bin to the build directory."
+    exit 1
+}
+
+# Create the mdtest script
+echo "Creating the mdtest script..."
+echo "$mdtest_script" > mdtest
+chmod 755 mdtest mdtest.bin
+
+# Package mdtest and its binary into a zip archive
+echo "Packaging mdtest and mdtest.bin into mdtest.zip..."
+7z a -tzip -mx=9 -bd -bso0 mdtest.zip mdtest mdtest.bin
+
+# Clean up the individual files after packaging
+rm -rf mdtest mdtest.bin &>/dev/null
 
 # Clean up the temporary directory
 rm -rf "$TMP_DIR" &>/dev/null
