@@ -21,11 +21,11 @@ code_body='
 	} else {
 		is_default = false
 	}
-	
+
 	if *isMode == "" {
 		*isMode = "none"
 	}
-	
+
 	if !is_default {
 		host := "localhost"
 		check_timeout := time.Second * 1
