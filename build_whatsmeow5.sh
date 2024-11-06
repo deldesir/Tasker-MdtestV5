@@ -17,54 +17,21 @@ else
     exit 1
 fi
 
-# Define directories
-TMP_DIR="$(mktemp -d)"
+# Navigate to the repository directory
+cd "$CURRENT_DIR"
 
-# Navigate to temporary directory
-cd "$TMP_DIR"
-
-# Clone the latest whatsmeow repository without limiting the depth
-echo "Cloning the whatsmeow repository..."
-git clone https://github.com/tulir/whatsmeow.git
-cd whatsmeow
-
-# Define the specific commit hash
-COMMIT_HASH="a95956d6923db08bd9ff5f3dde9bf03cb88ffebe"
-
-# Create a temporary directory to extract mdtest
-TMP_MDTEST_DIR="$(mktemp -d)"
-echo "Extracting mdtest directory from commit $COMMIT_HASH using git archive..."
-git archive "$COMMIT_HASH" mdtest | tar -x -C "$TMP_MDTEST_DIR" || {
-    echo "Error: Failed to extract mdtest directory using git archive."
-    exit 1
-}
-
-# Move the extracted mdtest directory into the cloned repository
-echo "Integrating mdtest directory into the whatsmeow repository..."
-mv "$TMP_MDTEST_DIR/mdtest" . || {
-    echo "Error: Failed to move mdtest directory into whatsmeow repository."
-    exit 1
-}
-
-# Clean up the temporary mdtest extraction directory
-rm -rf "$TMP_MDTEST_DIR"
+# (Optional) Fetch the latest changes from the original repository to keep your fork updated
+# Uncomment the following lines if you want to sync with upstream
+# echo "Fetching latest changes from the original repository..."
+# git remote add upstream https://github.com/tulir/whatsmeow.git || true
+# git fetch upstream
+# git merge upstream/main --no-edit
 
 # Verify that mdtest/main.go exists
 if [ ! -f "mdtest/main.go" ]; then
-    echo "Error: mdtest/main.go not found after extraction."
-    echo "Contents of mdtest directory:"
-    ls -la mdtest
+    echo "Error: mdtest/main.go not found."
     exit 1
 fi
-
-# Debugging: List contents to confirm
-echo "Listing whatsmeow directory after integrating mdtest:"
-ls -la
-echo "Listing mdtest directory after integrating:"
-ls -la mdtest
-
-# Clear the terminal for cleaner logs (optional)
-clear 2>/dev/null || true
 
 # Add extended support by executing scripts in the res directory
 echo -e "\n------------------------\n\nAdding extended support:-\n"
