@@ -17,51 +17,21 @@ else
     exit 1
 fi
 
-# Define directories
-TMP_DIR="$(mktemp -d)"
+# Navigate to the repository directory
+cd "$CURRENT_DIR"
 
-# Navigate to temporary directory
-cd "$TMP_DIR"
-
-# Clone the original whatsmeow repository
-echo "Cloning the original whatsmeow repository..."
-git clone https://github.com/tulir/whatsmeow.git
-cd whatsmeow
-
-# Verify that mdtest does not exist
-if [ -d "mdtest" ]; then
-    echo "Note: mdtest directory already exists in the original repository."
-else
-    echo "mdtest directory does not exist in the original repository."
-fi
-
-# Fetch the mdtest directory from your forked repository's main branch
-echo "Fetching mdtest directory from your forked repository's main branch..."
-git remote add deldesir https://github.com/deldesir/whatsmeow.git
-git fetch deldesir
-
-# Check out the mdtest directory from a fork's main branch
-git checkout deldesir/main -- mdtest || {
-    echo "Error: Failed to fetch mdtest directory from your fork's main branch."
-    exit 1
-}
+# (Optional) Fetch the latest changes from the original repository to keep your fork updated
+# Uncomment the following lines if you want to sync with upstream
+# echo "Fetching latest changes from the original repository..."
+# git remote add upstream https://github.com/tulir/whatsmeow.git || true
+# git fetch upstream
+# git merge upstream/main --no-edit
 
 # Verify that mdtest/main.go exists
 if [ ! -f "mdtest/main.go" ]; then
-    echo "Error: mdtest/main.go not found after fetching from your fork."
-    echo "Contents of mdtest directory:"
-    ls -la mdtest
+    echo "Error: mdtest/main.go not found."
     exit 1
 fi
-
-# Debugging: List contents to confirm
-echo "Listing whatsmeow directory after fetching mdtest:"
-ls -la
-echo "Listing mdtest directory:"
-ls -la mdtest
-
-# Clear the terminal for cleaner logs (optional)
-clear 2>/dev/null || true
 
 # Add extended support by executing scripts in the res directory
 echo -e "\n------------------------\n\nAdding extended support:-\n"
