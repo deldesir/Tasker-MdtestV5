@@ -6,13 +6,13 @@ echo "$step_number) $step_name"
 
 code_body='
 			//start
-			"type": strings.ToLower(waProto.ListMessage_ListType_name[int32(*waProto.ListMessage_PRODUCT_LIST.Enum())]),
+			"type": strings.ToLower(waE2E.ListMessage_ListType_name[int32(*waE2E.ListMessage_PRODUCT_LIST.Enum())]),
 			//stop
 '
 
-sed -i -e "$(grep -nm 1 -F '"type": strings.ToLower(waProto.ListMessage_ListType_name[int32(msg.ListMessage.GetListType())]),' whatsmeow/send.go | sed 's/:.*//')r /dev/stdin" whatsmeow/send.go <<< $code_body
+sed -i -e "$(grep -nm 1 -F '"type": strings.ToLower(waE2E.ListMessage_ListType_name[int32(msg.ListMessage.GetListType())]),' whatsmeow/send.go | sed 's/:.*//')r /dev/stdin" whatsmeow/send.go <<< $code_body
 
-sed -i '/"type": strings.ToLower(waProto.ListMessage_ListType_name\[int32(msg.ListMessage.GetListType())\]),/d' whatsmeow/send.go
+sed -i '/"type": strings.ToLower(waE2E.ListMessage_ListType_name[int32(msg.ListMessage.GetListType())]),/d' whatsmeow/send.go
 
 code_body='
 	//start
